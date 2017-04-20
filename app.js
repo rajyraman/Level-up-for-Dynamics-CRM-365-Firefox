@@ -6,7 +6,8 @@
         document.body.appendChild(scriptTag);
     };
     if(Array.from(document.scripts).findIndex(x=>x.id.startsWith('/_static/_common/scripts/ribbonactions.js')) !== -1){
-        injectScript(browser.extension.getURL('crmmethods.js'));
+        injectScript(chrome.extension.getURL('Sdk.Soap.min.js'));
+        injectScript(chrome.extension.getURL('crmmethods.js'));
         chrome.runtime.sendMessage({
             type: 'page',
             content: 'on',
@@ -23,6 +24,26 @@
     document.addEventListener("levelup", function(data) {
         if(data.detail && data.detail.type === 'page'){
             chrome.runtime.sendMessage(data.detail);
+        }
+    });
+    chrome.runtime.onMessage.addListener(function (message, sender, response) {
+        if(message.type === 'visibilityCheck'){
+            let contentPanels = Array.from(document.querySelectorAll('iframe')).filter(function (d) {
+                return d.style.visibility !== 'hidden'
+            });
+        
+            if (contentPanels && contentPanels.length > 0) {
+                let formDocument = contentPanels[0].contentWindow.document;
+                if(formDocument.getElementById('crmFormHeaderTop')){
+                    response('form');
+                }
+                else if(formDocument.querySelector('span.ms-crm-View-Name')){
+                    response('grid');
+                }
+            }
+            else{
+                response('general');
+            }
         }
     });
 })();
